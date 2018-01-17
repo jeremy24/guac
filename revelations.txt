@@ -1,0 +1,6 @@
+Volcards store student ID number followed by '=00' followed by the student's birthday.
+
+The birthday is checked during the swipe to ensure that it matches the student.
+
+The entire card is read.  Writing beyond the length of the original message will cause the card to not work.
+

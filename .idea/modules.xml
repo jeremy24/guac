@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/guac.iml" filepath="$PROJECT_DIR$/guac.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/guac122.iml" filepath="$PROJECT_DIR$/.idea/guac122.iml" />
     </modules>
   </component>
 </project>

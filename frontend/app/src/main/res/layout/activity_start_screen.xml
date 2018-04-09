@@ -6,6 +6,18 @@
     android:layout_height="match_parent"
     tools:context="cs402.guac.StartScreen">
 
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="147dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="112dp"
+        android:layout_marginStart="125dp"
+        android:text="NFC"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="218dp" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

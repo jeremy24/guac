@@ -9,6 +9,7 @@ import android.widget.Button;
 
 public class StartScreen extends AppCompatActivity {
     private Button button;
+    private Button button3;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -17,13 +18,26 @@ public class StartScreen extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openact();
+                openauth();
+            }
+        });
+        button3 = (Button) findViewById(R.id.button3);
+        button3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                opennfc();
             }
         });
     }
-    public void openact(){
+    public void openauth(){
         Intent intent = new Intent(this,MainActivity.class);
-//        ((Activity) getBaseContext()).finish();
+        this.finish();
+        startActivity(intent);
+    }
+
+    public void opennfc(){
+        Intent intent = new Intent(this,MainActivity.class);
+        this.finish();
         startActivity(intent);
     }
     

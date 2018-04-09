@@ -36,6 +36,8 @@ public class StartScreen extends AppCompatActivity {
                 openhome();
             }
         });
+//        Intent serviceIntent = new Intent(getApplicationContext(), MyHostApduService.class);
+//        startService(serviceIntent);
     }
     public void openauth(){
         Intent intent = new Intent(this,MainActivity.class);

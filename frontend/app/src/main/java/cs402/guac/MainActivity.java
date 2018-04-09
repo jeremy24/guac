@@ -2,6 +2,7 @@ package cs402.guac;
 
 
 import android.app.KeyguardManager;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.Manifest;
@@ -12,6 +13,8 @@ import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v4.app.ActivityCompat;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -37,12 +40,19 @@ public class MainActivity extends AppCompatActivity {
     private FingerprintManager.CryptoObject cryptoObject;
     private FingerprintManager fingerprintManager;
     private KeyguardManager keyguardManager;
+    private Button button4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        button4 = (Button) findViewById(R.id.button4);
+        button4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openhome();
+            }
+        });
         // If you’ve set your app’s minSdkVersion to anything lower than 23, then you’ll need to verify that the device is running Marshmallow
         // or higher before executing any fingerprint-related code
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -93,6 +103,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    public void openhome(){
+        Intent intent = new Intent(this,StartScreen.class);
+        this.finish();
+        startActivity(intent);
     }
 
 //Create the generateKey method that we’ll use to gain access to the Android keystore and generate the encryption key//

@@ -2,6 +2,7 @@ package cs402.guac;
 
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -71,7 +72,8 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
             FingerprintManager.AuthenticationResult result) {
 
         Toast.makeText(context, "Success!", Toast.LENGTH_LONG).show();
-        Intent myintent = new Intent(context,StartScreen.class);
+        Intent myintent = new Intent(context,NFC_Activity.class);
+        ((Activity) context).finish();
         context.startActivity(myintent);
     }
 

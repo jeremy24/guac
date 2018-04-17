@@ -88,9 +88,11 @@ def add_user():
         p = password
         print("password:", p)
 
-        password = bcrypt.hashpw(str(password).encode(), bcrypt.gensalt())
+        salt = bcrypt.gensalt(rounds=12)
+        password = bcrypt.hashpw(str(password).encode(), salt)
         print("pass: ", password)
 
+        salt=None
 
         print(bcrypt.checkpw(p.encode(), password))
 

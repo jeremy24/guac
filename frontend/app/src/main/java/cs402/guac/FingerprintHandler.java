@@ -75,6 +75,7 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
         Intent myintent = new Intent(context,NFC_Activity.class);
         ((Activity) context).finish();
         context.startActivity(myintent);
+
     }
 
 }

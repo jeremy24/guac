@@ -4,5 +4,7 @@
 Place your fingertip on the Home button to verify your identity
 </string>
     <string name="explanation">Gofuck yourself</string>
+    <string name="servicedesc">HCE</string>
+    <string name="title_activity_hce">HCE</string>
 </resources>
 

@@ -10,6 +10,9 @@
     <uses-permission android:name="android.permission.NFC" />
 
     <uses-feature android:name="android.hardware.nfc" />
+    <uses-feature
+        android:name="android.hardware.nfc.hce"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -26,10 +29,28 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".FingerprintActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".NFC_Activity" />
 
+        <service
+            android:name=".HostCardEmulatorService"
+            android:exported="false"
+            android:permission="android.permission.BIND_NFC_SERVICE">
+
+            <intent-filter>
+                <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.nfc.cardemulation.host_apdu_service"
+                android:resource="@xml/apduservice" />
+        </service>
+
+        <activity
+            android:name=".HCE"
+            android:label="@string/title_activity_hce"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

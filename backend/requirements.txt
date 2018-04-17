@@ -1,7 +1,14 @@
-click==6.7
-Flask==0.12.2
-itsdangerous==0.24
-Jinja2==2.10
-MarkupSafe==1.0
-PyMySQL==0.8.0
-Werkzeug==0.14.1
+bcrypt (3.1.4)
+cffi (1.11.5)
+click (6.7)
+Flask (0.12.2)
+itsdangerous (0.24)
+Jinja2 (2.10)
+MarkupSafe (1.0)
+pip (9.0.1)
+pycparser (2.18)
+pycryptodome (3.6.1)
+PyMySQL (0.8.0)
+setuptools (28.8.0)
+six (1.11.0)
+Werkzeug (0.14.1)

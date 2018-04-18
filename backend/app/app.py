@@ -19,6 +19,7 @@ import bcrypt
 import time
 import functools
 import sys
+import base64
 
 # Classes
 
@@ -26,6 +27,8 @@ import sys
 #     def __init__(self, message):
 
 WORK_FACTOR = 13
+
+
 
 
 class Code:
@@ -38,6 +41,9 @@ class Code:
 
     authorize_trans = Response("Transaction authorized", status=200)
     fail_trans = Response("Transaction not authorized", status=200)
+
+
+
 
 
 
@@ -98,7 +104,12 @@ def verify_ecc_signature(message, public_key_string, signature):
         print("messaged passed to verify_ecc_signature must be a string")
         return False
 
-    pub_key = ECC.import_key(public_key_string)
+    try:
+        pub_key = ECC.import_key(public_key_string)
+    except Exception as ex:
+        print("error making ecc key: ", ex)
+
+
     hashed = SHA256.new(message.encode("utf-8"))
 
     verifier = DSS.new(pub_key, 'fips-186-3')
@@ -109,6 +120,7 @@ def verify_ecc_signature(message, public_key_string, signature):
     except ValueError:
         print("The message is not authentic.")
         return False
+
 
 
 
@@ -133,11 +145,16 @@ class Server:
         self.app.run(host='0.0.0.0')
 
 
+
 # Global Variables
 
 APP = Flask(__name__)
 # server_app = Server("192.168.11.153", 3306, 'root', 'password', APP)
 server_app = Server("home.piroax.com", 9003, 'root', 'password', APP)
+
+
+
+
 
 
 def query_db(query):
@@ -160,6 +177,46 @@ def query_db(query):
 @APP.route('/')
 def hello_world():
     return 'This is not the right way to access the VolCard app...!'
+
+
+
+
+@APP.route("/message/validate", methods=["POST"])
+def validate_message():
+    try:
+        data = request.get_json()
+        keys = ["username", "message", "signature"]
+
+        if not check_keys(data=data, keys=keys):
+            return Code.bad_request
+
+        username = data["username"]
+        message = data["message"]
+        signature = data["signature"]
+
+        user = _get_user(username)
+        pub_str = user["public_key"]
+
+        decoded_sig = base64.b64decode(signature)
+
+        print("Validating:\n\tmsg: {0}\n\tkey: {1}\n\tsig: {2}".format(message, pub_str, signature))
+
+
+        verified = verify_ecc_signature(message, pub_str, decoded_sig)
+
+        print("VERIFIED:  ", verified)
+
+
+
+        if verified:
+            return Code.authorize_trans
+        elif verified is None: # returning None from this is an error state
+            return Code.server_error
+        return Code.fail_trans
+
+    except Exception as ex:
+        print("/user/get", ex)
+        return Code.server_error
 
 
 
@@ -226,51 +283,6 @@ def _get_user(user=None):
 
 
 
-@error_wrap(do_exit=True)
-def validate(_username, message, _signature):
-    user = _get_user(_username)
-    key_str = user['public_key']
-
-    key = RSA.import_key(key_str)
-    print("key", key)
-    digest = SHA256.new(message)
-    print("digest", digest)
-    try:
-        pkcs1_15.new(key).verify(digest, _signature)
-        print("The signature is valid.")
-        return True
-    except (ValueError, TypeError):
-        print("The signature is not valid.")
-        return False
-
-
-@APP.route("/message/validate", methods=["POST"])
-def validate_message():
-    try:
-        data = request.get_json()
-        keys = ["username", "message", "signature"]
-
-        if not check_keys(data=data, keys=keys):
-            return Code.bad_request
-
-        username = data["username"]
-        message = data["message"]
-        signature = data["signature"]
-
-        # don't let them just throw random stuff at us
-        if _get_user(username) is None:
-            return Code.not_authorized
-
-        res = validate(username, message, signature)
-        if res == True:
-            return Code.authorize_trans
-        elif res is None: # returning None from this is an error state
-            return Code.server_error
-        return Code.fail_trans
-
-    except Exception as ex:
-        print("/user/get", ex)
-        return Code.server_error    
 
 
 @APP.route("/user/addkey", methods=["POST"])
@@ -338,39 +350,44 @@ def get_user():
 
 
 if __name__ == '__main__':
-    # server_app.start()
-    key = ECC.generate(curve="P-256")
-    print(key.public_key().export_key(format="OpenSSH"))
-    pub = key.public_key()
-
-    raw_msg = "user=bob,transaction=145368,endpoint=00015,type=purchase,amount=15.35,time={}".format(str(time.time()))
-    msg = raw_msg.encode("utf-8")
-
-    # h = SHA256.new(b"test").digest()
-    h = SHA256.new(msg)
-    print(h)
-    # h.update(msg)
-    # print(h.digest())
-    # h = h.digest()
-
-    print(pub)
-
-    signer = DSS.new(key, 'fips-186-3')
-    signature = signer.sign(h)
-    print("Sig: ", signature)
-
-    pub_key_str = pub.export_key(format="OpenSSH")
-
-    print(pub_key_str)
-
-    time.sleep(1)
-    verify_ecc_signature(raw_msg, pub_key_str, signature)
-
-    # verifier = DSS.new(pub, 'fips-186-3')
-    # try:
-    #     verifier.verify(h, signature)
-    #     print ("The message is authentic.")
-    # except ValueError:
-    #     print ("The message is not authentic.")
+    server_app.start()
+    # key = ECC.generate(curve="P-256")
+    # print(key.public_key().export_key(format="OpenSSH"))
+    # pub = key.public_key()
+    #
+    # raw_msg = "user=bob,transaction=145368,endpoint=00015,type=purchase,amount=15.35,time={}".format(str(time.time()))
+    # msg = raw_msg.encode("utf-8")
+    #
+    # # h = SHA256.new(b"test").digest()
+    # h = SHA256.new(msg)
+    # # print(h)
+    # # h.update(msg)
+    # # print(h.digest())
+    # # h = h.digest()
+    #
+    # # print("pub: ", pub)
+    #
+    # signer = DSS.new(key, 'fips-186-3')
+    # signature = signer.sign(h)
+    #
+    # encoded_sig = base64.b64encode(signature)
+    #
+    # print("Sig: ", encoded_sig.decode())
+    #
+    # pub_key_str = pub.export_key(format="OpenSSH")
+    #
+    # print("pub: ", pub_key_str)
+    # print("msg: ", raw_msg)
+    #
+    #
+    # time.sleep(1)
+    # verify_ecc_signature(raw_msg, pub_key_str, signature)
+    #
+    # # verifier = DSS.new(pub, 'fips-186-3')
+    # # try:
+    # #     verifier.verify(h, signature)
+    # #     print ("The message is authentic.")
+    # # except ValueError:
+    # #     print ("The message is not authentic.")
 
 

@@ -1,9 +1,12 @@
-FROM digitalgenius/alpine-python3-pg AS build
+#FROM digitalgenius/alpine-python3-pg AS build
+FROM ubuntu
 MAINTAINER Jeremy Poff
 
-#RUN apt-get update -y \
+RUN apt-get update;      \
+    apt-get upgrade -y;
 
-
+RUN apt-get install -y python3 python3-pip build-essential;
+RUN apt-get install -y libssl-dev libffi-dev python-dev;
 
 
 EXPOSE 5000

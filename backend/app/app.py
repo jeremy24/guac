@@ -40,7 +40,7 @@ class Code:
     not_authorized = Response("Not Authorized", status=400)
 
     authorize_trans = Response("Transaction authorized", status=200)
-    fail_trans = Response("Transaction not authorized", status=200)
+    fail_trans = Response("Transaction not authorized", status=418)
 
 
 

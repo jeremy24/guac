@@ -6,6 +6,12 @@
     android:layout_height="match_parent"
     tools:context="cs402.guac.FingerprintActivity">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:id="@+id/textview"/>
+
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="36dp"
@@ -25,9 +31,10 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/imageView"
         android:layout_marginBottom="81dp"
+        android:layout_marginStart="1dp"
         android:text="@string/instructions"
         app:layout_constraintBottom_toBottomOf="parent"
-        tools:layout_editor_absoluteX="1dp" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/button4"

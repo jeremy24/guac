@@ -17,10 +17,10 @@ public class StartScreen extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start_screen);
-        PackageManager pm = getPackageManager();
-        pm.setComponentEnabledSetting(new ComponentName(this, "android.nfc.cardemulation.HostApduService"), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+//        PackageManager pm = getPackageManager();
+//        pm.setComponentEnabledSetting(new ComponentName(this, "android.nfc.cardemulation.HostApduService"), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
         //stopService(new Intent(this, HostCardEmulatorService.class));
-        /*
+
         button = (Button) findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -53,7 +53,7 @@ public class StartScreen extends AppCompatActivity {
 //        startService(serviceIntent);
 //        Intent serviceIntent2 = new Intent(getApplicationContext(), HostCardEmulatorService.class);
 //        startService(serviceIntent2);
-*/
+
     }
     public void openauth(){
         Intent intent = new Intent(this,FingerprintActivity.class);

@@ -30,7 +30,7 @@
         </activity>
         <activity
             android:name=".FingerprintActivity"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme" />
         <activity android:name=".NFC_Activity" />
 
         <service
@@ -50,7 +50,7 @@
         <activity
             android:name=".HCE"
             android:label="@string/title_activity_hce"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.AppBarOverlay"></activity>
     </application>
 
 </manifest>

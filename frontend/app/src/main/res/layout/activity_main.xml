@@ -6,33 +6,16 @@
     android:layout_height="match_parent"
     tools:context="cs402.guac.FingerprintActivity">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
-        android:text="@string/app_name"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="63dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:id="@+id/textview"/>
-
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="wrap_content"
+        android:layout_width="36dp"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textview"
         android:layout_centerHorizontal="true"
-        android:layout_marginStart="165dp"
-        android:layout_marginTop="241dp"
+        android:layout_marginBottom="26dp"
+        android:layout_marginStart="174dp"
+        app:layout_constraintBottom_toTopOf="@+id/textView2"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
         app:srcCompat="@drawable/fingerprint" />
 
     <TextView
@@ -52,9 +35,11 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="456dp"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
         android:text="Back"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </android.support.constraint.ConstraintLayout>

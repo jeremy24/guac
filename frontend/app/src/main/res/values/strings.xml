@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Fingerprint Authentication</string>
+    <string name="app_name">VolCard</string>
     <string name="instructions">
-Place your fingertip on the Home button to verify your identity
+Place your fingertip on your fingerprint button to verify your identity
 </string>
     <string name="explanation">Gofuck yourself</string>
     <string name="servicedesc">HCE</string>

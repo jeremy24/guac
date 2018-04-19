@@ -1,5 +1,7 @@
-.idea/
+.idea/  
 
 # jeremy's venv folder
-backend/backend/ 
+
+backend/venv/
+*/venv/
 

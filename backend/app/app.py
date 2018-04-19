@@ -99,13 +99,14 @@ def verify_password(plain_password, password_hash):
 
 
 @error_wrap(do_exit=True)
-def verify_ecc_signature(message, public_key_string, signature):
+def verify_ecc_signature(message, public_key_encoded, signature):
     if type(message) != str:
         print("messaged passed to verify_ecc_signature must be a string")
         return False
 
     try:
-        pub_key = ECC.import_key(public_key_string)
+        pub_key = base64.b64decode(public_key_encoded)
+        pub_key = ECC.import_key(pub_key)
     except Exception as ex:
         print("error making ecc key: ", ex)
 
@@ -351,6 +352,9 @@ def get_user():
 
 if __name__ == '__main__':
     server_app.start()
+
+
+
     # key = ECC.generate(curve="P-256")
     # print(key.public_key().export_key(format="OpenSSH"))
     # pub = key.public_key()
@@ -374,14 +378,15 @@ if __name__ == '__main__':
     #
     # print("Sig: ", encoded_sig.decode())
     #
-    # pub_key_str = pub.export_key(format="OpenSSH")
+    # pub_key = pub.export_key(format="DER")
+    # pub_b64 = base64.b64encode(pub_key)
     #
-    # print("pub: ", pub_key_str)
+    # print("pub: ", pub_b64)
     # print("msg: ", raw_msg)
     #
     #
     # time.sleep(1)
-    # verify_ecc_signature(raw_msg, pub_key_str, signature)
+    # verify_ecc_signature(raw_msg, pub_b64, signature)
     #
     # # verifier = DSS.new(pub, 'fips-186-3')
     # # try:

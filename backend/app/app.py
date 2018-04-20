@@ -27,13 +27,14 @@ import base64
 #     def __init__(self, message):
 
 WORK_FACTOR = 13
+DUPE_USER_KEY = 1062
 
 
 
 
 class Code:
     bad_request = Response("Invalid Request", status=400)
-    dupe_user = Response("User already exists", status=400)
+    dupe_user = Response("User already exists", status=418)
     server_error = Response("Internal Error", status=500)
     success = Response("Success", status=200)
     user_not_found = Response("User not found", status=400)
@@ -84,6 +85,9 @@ def error_wrap(fn, do_exit=False):
 @error_wrap(do_exit=True)
 def check_keys(data, keys=list()):
     for key in keys:
+        if type(data) != dict:
+            print("Data passed to check_keys is not a dict")
+            return False
         if key not in data.keys():
             print("Missing key: {0}".format(str(key)))
             return False
@@ -157,7 +161,6 @@ server_app = Server("home.piroax.com", 9003, 'root', 'password', APP)
 
 
 
-
 def query_db(query):
     try:
         print("QUERY: ", query)
@@ -169,8 +172,9 @@ def query_db(query):
     except Exception as ex:
         print("Query_db error: {0}".format(ex))
         server_app.db_conn.rollback()
-        if ex.args[0] == 1644:
-            return 1644
+        print("ex", ex)
+        if ex.args[0] == DUPE_USER_KEY:
+            return DUPE_USER_KEY
         raise ex
 
 
@@ -230,7 +234,7 @@ def add_user():
         if not check_keys(data=data, keys=keys):
             return Code.bad_request
 
-        print("/user/add:  {0}".format(data))
+        print("Add user req:  Type:{0}  Date: {1}".format(type(data), data))
 
         username = data["username"]
         password = data['password']
@@ -256,8 +260,9 @@ def add_user():
 
         res = query_db(query_str)
 
-        # print("RES:  ", res)
+        print("RES:  ", res)
         if res == 1062:
+            print("dupe user")
             return Code.dupe_user
         return Code.success
     except Exception as ex:
@@ -290,7 +295,6 @@ def _get_user(user=None):
 def add_user_key():
     try:
         data = request.get_json()
-        print("data", data)
         keys = ["username", "public_key", "password"]
 
         if not check_keys(data, keys):

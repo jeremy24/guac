@@ -25,8 +25,12 @@ class HostCardEmulatorService: HostApduService() {
     }
 
     private var message = "Success"
-    private var status = 0
-    private var id = "397102"
+    var status: Int? = 0
+    private var id = "penis"
+
+    public fun incStatus(){
+        status = status!! +1
+    }
 
     override fun onDeactivated(reason: Int) {
         Log.d(TAG, "Deactivated: " + reason)
@@ -37,6 +41,7 @@ class HostCardEmulatorService: HostApduService() {
     }
 
     override fun processCommandApdu(commandApdu: ByteArray?, extras: Bundle?): ByteArray {
+        Log.println(4, "tag", this.status.toString())
         if (commandApdu == null) {
             return Utils.hexStringToByteArray(STATUS_FAILED)
         }
@@ -45,6 +50,7 @@ class HostCardEmulatorService: HostApduService() {
         if (hexCommandApdu.length < MIN_APDU_LENGTH) {
             return Utils.hexStringToByteArray(STATUS_FAILED)
         }
+
 
         if (hexCommandApdu.substring(0, 2) != DEFAULT_CLA) {
             return Utils.hexStringToByteArray(CLA_NOT_SUPPORTED)
@@ -55,9 +61,17 @@ class HostCardEmulatorService: HostApduService() {
         }
 
         if (hexCommandApdu.substring(10, 24) == AID)  {
-            return STATUS_SUCCESS.toByteArray()
+            if(hexCommandApdu.substring(24,26) == "00"){
+                return "Hello".toByteArray()
+            }
+            if(hexCommandApdu.substring(24,26) == "01"){
+                return "benis".toByteArray()
+            }
+
         } else {
             return Utils.hexStringToByteArray(STATUS_FAILED)
         }
+
+        return Utils.hexStringToByteArray(STATUS_FAILED)
     }
 }

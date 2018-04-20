@@ -39,7 +39,7 @@ class Utils {
         fun hexToAscii(hexStr: String): String {
             val output = StringBuilder("")
 
-            var i = 1
+            var i = 0
             while (i < hexStr.length) {
                 val str = hexStr.substring(i, i + 2)
                 output.append(Integer.parseInt(str, 16).toChar())

@@ -18,6 +18,7 @@ import kotlinx.android.synthetic.main.activity_nfcscreen.*
 class NFCScreen : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private var nfcAdapter: NfcAdapter? = null
+    public var status = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,14 +46,27 @@ class NFCScreen : AppCompatActivity(), NfcAdapter.ReaderCallback {
     override fun onTagDiscovered(tag: Tag?) {
         val isoDep = IsoDep.get(tag)
         isoDep.connect()
+
+        var respString = "00A4040007A0000002471001"
+
+        if(status > 1){
+            status = 0
+        }
+
+        if(status == 0){
+            respString += "00"
+        }
+        else if(status == 1){
+            respString += "01"
+        }
+        status+=1
         val response = isoDep.transceive(Utils.hexStringToByteArray(
-                "00A4040007A0000002471001"))
-        var tmp = Utils.hexToAscii(response.toString())
+                respString))
+        var tmp = response
 
 
-        //this.textView3.setText(response.toString() + "- hex: " + Utils.toHex(response).toString());
-        runOnUiThread {textView3.append("\nCard Response: "
-                + tmp)}//Utils.hexToAscii(response.toString())) }//Utils.toHex(response)) }
+        runOnUiThread {textView3.append("Card Response: "
+                + Utils.hexToAscii(Utils.toHex(tmp)) + " " + status.toString() + " " + respString)}
         isoDep.close()
     }
 

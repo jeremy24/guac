@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GIVE US ALL CARDS</string>
+    <string name="app_name">Operation: GUAC</string>
     <string name="sID">Enter your UTK ID here.</string>
     <string name="pass">Enter your password here.</string>
     <string name="instructions">
@@ -7,5 +7,6 @@
     </string>
     <string name="aiddescription">negotiating p2p</string>
     <string name="servicedesc">negotiating p2p</string>
+    <string name="user">USER ID: </string>
 </resources>
 

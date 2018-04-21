@@ -10,7 +10,7 @@ import android.os.Bundle
 import android.support.annotation.RequiresApi
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import com.guac.android.guac.R.id.textView
+//import com.guac.android.guac.R.id.textView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_nfcscreen.*
 

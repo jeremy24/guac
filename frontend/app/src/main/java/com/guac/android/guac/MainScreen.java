@@ -3,6 +3,7 @@ package com.guac.android.guac;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.Image;
 import android.nfc.cardemulation.NfcFCardEmulation;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
@@ -20,6 +21,7 @@ import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v4.app.ActivityCompat;
+import android.widget.ImageView;
 import android.widget.TextView;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -30,6 +32,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Enumeration;
+
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
@@ -53,14 +57,56 @@ public class MainScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
         final Button button = findViewById(R.id.button);
+        final TextView button_text = findViewById(R.id.register);
+        final ImageView icon = findViewById(R.id.imageView2);
+        final TextView id_text = findViewById(R.id.user_ID_View);
+
         button.setVisibility(View.VISIBLE);
         button.setBackgroundColor(Color.TRANSPARENT);
         button.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
                 Intent intent = new Intent(MainScreen.this, RegisterScreen.class);
                 startActivity(intent);
+                finish();
             }
         });
+        KeyStore keyStore = null;
+        try {
+            keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            if(keyStore.size() == 0){
+                id_text.setVisibility(4);
+                findViewById(R.id.imageView).setVisibility(4);
+                findViewById(R.id.textView2).setVisibility(4);
+                return;
+            }
+            else{
+                Enumeration<String> e =  keyStore.aliases();
+                String userID = new String();
+                String tmp = e.nextElement();
+                while(e.hasMoreElements()){
+                    if(tmp == "yourKey"){
+                        e.nextElement();
+                        continue;
+                    }
+                    tmp = e.nextElement();
+                }
+                userID = tmp;
+                id_text.setText("Signed in as " + userID);
+                button.setVisibility(View.INVISIBLE);
+                button_text.setVisibility(View.INVISIBLE);
+                icon.setVisibility(View.INVISIBLE);
+            }
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         // If you’ve set your app’s minSdkVersion to anything lower than 23, then you’ll need to verify that the device is running Marshmallow
         // or higher before executing any fingerprint-related code
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

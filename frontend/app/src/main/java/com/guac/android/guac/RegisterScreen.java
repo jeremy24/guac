@@ -96,6 +96,7 @@ public class RegisterScreen extends AppCompatActivity {
                         keyStore.load(null);
                         PrivateKey privateKey = (PrivateKey) keyStore.getKey(studentID.getText().toString(), null);
                         PublicKey publicKey = keyStore.getCertificate(studentID.getText().toString()).getPublicKey();
+                        Log.println(4, "log", String.valueOf(keyStore.size()));
                         /*
                         String s = "hello";
                         Signature sig = Signature.getInstance("SHA256withECDSA");
@@ -129,9 +130,8 @@ public class RegisterScreen extends AppCompatActivity {
                         e.printStackTrace();
                     } catch (InvalidAlgorithmParameterException e) {
                         e.printStackTrace();
-                    } catch (SignatureException e) {
-                        e.printStackTrace();
                     }
+                    finish();
                     startActivity(new Intent(RegisterScreen.this, MainScreen.class));
                 }
             }

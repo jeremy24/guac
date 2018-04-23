@@ -1,6 +1,8 @@
 package com.guac.android.guac;
 
 import android.annotation.TargetApi;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -97,6 +99,11 @@ public class RegisterScreen extends AppCompatActivity {
                         PrivateKey privateKey = (PrivateKey) keyStore.getKey(studentID.getText().toString(), null);
                         PublicKey publicKey = keyStore.getCertificate(studentID.getText().toString()).getPublicKey();
                         Log.println(4, "log", String.valueOf(keyStore.size()));
+                        /*
+                        Intent broadcast1 = new Intent("getting_data");
+                        broadcast1.putExtra("username", studentID.getText().toString());
+                        sendBroadcast(broadcast1);
+                        */
                         /*
                         String s = "hello";
                         Signature sig = Signature.getInstance("SHA256withECDSA");

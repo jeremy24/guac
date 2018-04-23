@@ -13,6 +13,10 @@ import android.util.Log
 //import com.guac.android.guac.R.id.textView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_nfcscreen.*
+import java.security.KeyStore
+import java.security.PrivateKey
+import java.security.Signature
+import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.KITKAT)
 class NFCScreen : AppCompatActivity(), NfcAdapter.ReaderCallback {
@@ -20,10 +24,32 @@ class NFCScreen : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private var nfcAdapter: NfcAdapter? = null
     public var status = 0
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nfcscreen)
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+
+        var hexCommandApdu: String = "00A4040007A000000247100100"
+        val keyStore = KeyStore.getInstance("AndroidKeyStore")
+        val userID: String = Utils.getUserID()
+        Log.println(4, "tag", userID)
+        keyStore.load(null)
+        val privateKey = keyStore.getKey(userID, null) as PrivateKey
+        val publicKey = keyStore.getCertificate(userID).publicKey
+        var sign: String
+        sign = hexCommandApdu.substring(0, hexCommandApdu.length)
+
+        var sig: Signature = Signature.getInstance("SHA256withECDSA")
+        sig.initSign(privateKey)
+        sig.update(Utils.hexStringToByteArray(hexCommandApdu))//.toByte())
+        var signed: ByteArray = sig.sign()
+
+
+        var sig2: Signature = Signature.getInstance("SHA256withECDSA")
+        val publicKeyBytes = Base64.getEncoder().encode(publicKey.encoded)
+        val pubKey = String(publicKeyBytes)
+        Log.println(4, "tag", pubKey)
         //val intent = Intent(this, HostCardEmulatorService::class.java)
         //startService(intent)
         //nfcAdapter?.disableReaderMode(this);

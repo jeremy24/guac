@@ -1,4 +1,4 @@
-package com.guac.android.guac
+package com.guac.android.pos
 
 import android.util.Log
 import java.security.KeyStore
@@ -52,7 +52,6 @@ class Utils {
 
             return output.toString()
         }
-
         fun getUserID(): String{
             try {
                 val keyStore = KeyStore.getInstance("AndroidKeyStore")

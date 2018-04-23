@@ -1,10 +1,19 @@
 package com.guac.android.guac
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.nfc.cardemulation.HostApduService
 import android.os.Build
 import android.os.Bundle
 import android.support.annotation.RequiresApi
 import android.util.Log
+import java.security.KeyStore
+import java.security.PrivateKey
+import java.security.PublicKey
+import java.security.Signature
+import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.KITKAT)
 /**
@@ -21,15 +30,35 @@ class HostCardEmulatorService: HostApduService() {
         val AID = "A0000002471001"
         val SELECT_INS = "A4"
         val DEFAULT_CLA = "00"
-        val MIN_APDU_LENGTH = 12
+        val MIN_APDU_LENGTH = 0
     }
 
     private var message = "Success"
     var status: Int? = 0
-    private var id = "penis"
+    private lateinit var username: String
+
 
     public fun incStatus(){
         status = status!! +1
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        /*
+        val broadCastReceiver = object : BroadcastReceiver() {
+            override fun onReceive(contxt: Context?, intent: Intent?) {
+
+                if (intent != null) {
+                    when (intent.action) {
+                        intent.getStringExtra("username") -> username
+                    }
+                }
+            }
+        }
+        var intentFilter: IntentFilter = IntentFilter()
+        intentFilter.addAction("getting_data")
+        registerReceiver(broadCastReceiver, intentFilter)
+        */
     }
 
     override fun onDeactivated(reason: Int) {
@@ -40,8 +69,9 @@ class HostCardEmulatorService: HostApduService() {
         this.message = msg;
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun processCommandApdu(commandApdu: ByteArray?, extras: Bundle?): ByteArray {
-        Log.println(4, "tag", this.status.toString())
+
         if (commandApdu == null) {
             return Utils.hexStringToByteArray(STATUS_FAILED)
         }
@@ -60,18 +90,42 @@ class HostCardEmulatorService: HostApduService() {
             return Utils.hexStringToByteArray(INS_NOT_SUPPORTED)
         }
 
-        if (hexCommandApdu.substring(10, 24) == AID)  {
-            if(hexCommandApdu.substring(24,26) == "00"){
-                return "Hello".toByteArray()
+        Log.println(4, "log", hexCommandApdu.substring(11,13))
+        if (hexCommandApdu.substring(10,24) == AID)  {
+            if(hexCommandApdu.substring(24,26) == "00") {
+                val keyStore = KeyStore.getInstance("AndroidKeyStore")
+                val userID: String = Utils.getUserID()
+                Log.println(4, "tag", userID)
+                keyStore.load(null)
+                val privateKey = keyStore.getKey(userID, null) as PrivateKey
+                val publicKey = keyStore.getCertificate(userID).publicKey
+                var sign: String
+                sign = hexCommandApdu.substring(0, 24)
+
+                var sig: Signature = Signature.getInstance("SHA256withECDSA")
+                sig.initSign(privateKey)
+                sig.update(Utils.hexStringToByteArray(hexCommandApdu))//.toByte())
+                var signed: ByteArray = sig.sign()
+
+
+                var sig2: Signature = Signature.getInstance("SHA256withECDSA")
+                val publicKeyBytes = Base64.getEncoder().encode(publicKey.encoded)
+                val pubKey = String(publicKeyBytes)
+                Log.println(4, "tag", pubKey)
+                sig2.initVerify(publicKey)
+                sig2.update(Utils.hexStringToByteArray(sign))
+                var boo: Boolean = sig2.verify(signed)
+                Log.println(4, "tag", boo.toString() + " " + userID)
+                return signed
             }
-            if(hexCommandApdu.substring(24,26) == "01"){
-                return "benis".toByteArray()
+            if(hexCommandApdu.substring(24,26) == "11"){
+                return Utils.getUserID().toByteArray()
             }
 
         } else {
-            return Utils.hexStringToByteArray(STATUS_FAILED)
+            return "fail".toByteArray()//Utils.hexStringToByteArray(STATUS_FAILED)
         }
 
-        return Utils.hexStringToByteArray(STATUS_FAILED)
+        return "fail".toByteArray()//Utils.hexStringToByteArray(STATUS_FAILED)
     }
 }

@@ -22,6 +22,7 @@ import time
 import functools
 import sys
 import base64
+import subprocess
 
 # Classes
 
@@ -113,24 +114,17 @@ def verify_ecc_signature(message, public_key_encoded, sig):
         print("messaged passed to verify_ecc_signature must be a string")
         return False
 
-    try:
-        pub_key = base64.b64decode(public_key_encoded)
-        ecc_key = ECC.import_key(pub_key)
-    except Exception as ex:
-        print("error making ECC key, must be wrong type", ex)
-        return False
+    rv = subprocess.call(["java", "Verify", sig, public_key_encoded, message])
+    print("RV of java call {0}".format(rv))
 
-    hashed = SHA256.new(message.encode("utf-8"))
-    verifier_ecc = DSS.new(ecc_key, "fips-186-3")
-
-    try:
-        verifier_ecc.verify(hashed, sig)
+    if rv is 9:
         print("The message is authentic.  ECC")
-        # verifier_dsa.verify(hashed, sig)
-        # print("The message is authentic.  DSA")
         return True
-    except ValueError as ex:
-        print("The message is not authentic.   ECC", ex)
+    elif rv is 6:
+        print("The message is not authentic.  ECC")
+        return False
+    else:
+        print("Java call screwed up somehow. ECC")
         return False
 
 
@@ -236,7 +230,7 @@ def validate_message_ecc():
         print("Validating ECC:\n\tmsg: '{0}'\n\tkey: '{1}'\n\tsig: '{2}'".format(message, pub_str, signature))
         print("Lengths: {0} {1} {2}".format(len(message), len(pub_str), len(signature)))
 
-        verified = verify_ecc_signature(message, pub_str, decoded_sig)
+        verified = verify_ecc_signature(message, pub_str, signature)
 
         print("VERIFIED:  ", verified)
 
@@ -426,51 +420,5 @@ def get_user():
 
 if __name__ == '__main__':
     server_app.start()
-
-
-
-    # key = ECC.generate(curve="P-256")
-    # e = base64.b64encode(key.public_key().export_key(format="DER"))
-    #
-    #
-    #
-    # print("Key:", str(e))
-    # pub = key.public_key()
-    # #
-
-    #
-    # key = ECC.generate(curve="P-256")
-    # e = base64.b64encode(key.public_key().export_key(format="DER"))
-    # # raw_msg = "user=bob,transaction=145368,endpoint=00015,type=purchase,amount=15.35,time={0}".format(str(time.time()))
-    #
-    # raw_msg = "00A4040007A000000247100100"
-    #
-    # msg = raw_msg.encode()
-    # h = SHA256.new(msg)
-    #
-    # signer = DSS.new(key, 'fips-186-3')
-    # signature = signer.sign(h)
-    # encoded_sig = base64.b64encode(signature)
-
-
-    #
-    # print("Sig: ", encoded_sig.decode())
-    #
-    # # pub_key = pub.export_key(format="DER")
-    # # pub_b64 = base64.b64encode(pub_key)
-    # #
-    # # print("pub: ", pub_b64)
-    # print("msg: ", raw_msg)
-    # #
-    #
-    # time.sleep(1)
-    # verify_ecc_signature(raw_msg, e, signature)
-    #
-    # # verifier = DSS.new(pub, 'fips-186-3')
-    # # try:
-    # #     verifier.verify(h, signature)
-    # #     print ("The message is authentic.")
-    # # except ValueError:
-    # #     print ("The message is not authentic.")
 
 

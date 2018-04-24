@@ -128,31 +128,6 @@ def verify_ecc_signature(message, public_key_encoded, sig):
         return False
 
 
-def verify_rsa_signature(message, public_key_encoded, sig):
-    if type(message) != str:
-        print("messaged passed to verify_rsa_signature must be a string")
-        return False
-
-    try:
-        pub_key = base64.b64decode(public_key_encoded)
-        rsa_key = RSA.import_key(pub_key)
-    except Exception as ex:
-        print("error making RSA key, must be wrong type:  ", ex)
-        return False
-
-    hashed = SHA256.new(message.encode("utf-8"))
-    verifier_rsa = pkcs1_15.new(rsa_key)
-
-    try:
-        verifier_rsa.verify(hashed, sig)
-        print("The message is authentic.  RSA")
-        # verifier_dsa.verify(hashed, sig)
-        # print("The message is authentic.  DSA")
-        return True
-    except ValueError as ex:
-        print("The message is not authentic.  RSA", ex)
-        return False
-
 
 
 

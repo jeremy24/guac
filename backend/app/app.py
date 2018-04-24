@@ -13,6 +13,8 @@ from Crypto.Hash import BLAKE2b
 
 from Crypto.PublicKey import RSA
 from Crypto.PublicKey import ECC
+from Crypto.PublicKey import DSA
+
 
 import pymysql
 import bcrypt
@@ -31,17 +33,20 @@ DUPE_USER_KEY = 1062
 
 
 
+def resp_json(msg):
+    return json.dumps({"message": str(msg)})
+
 
 class Code:
-    bad_request = Response("Invalid Request", status=400)
-    dupe_user = Response("User already exists", status=418)
-    server_error = Response("Internal Error", status=500)
-    success = Response("Success", status=200)
-    user_not_found = Response("User not found", status=400)
-    not_authorized = Response("Not Authorized", status=400)
+    bad_request = Response(resp_json("Invalid Request"), status=400)
+    dupe_user = Response(resp_json("User already exists"), status=418)
+    server_error = Response(resp_json("Internal Error"), status=500)
+    success = Response(resp_json("Success"), status=200)
+    user_not_found = Response(resp_json("User not found"), status=400)
+    not_authorized = Response(resp_json("Not Authorized"), status=400)
 
-    authorize_trans = Response("Transaction authorized", status=200)
-    fail_trans = Response("Transaction not authorized", status=418)
+    authorize_trans = Response(resp_json("Transaction authorized"), status=200)
+    fail_trans = Response(resp_json("Transaction not authorized"), status=418)
 
 
 
@@ -103,31 +108,56 @@ def verify_password(plain_password, password_hash):
 
 
 @error_wrap(do_exit=True)
-def verify_ecc_signature(message, public_key_encoded, signature):
+def verify_ecc_signature(message, public_key_encoded, sig):
     if type(message) != str:
         print("messaged passed to verify_ecc_signature must be a string")
         return False
 
     try:
         pub_key = base64.b64decode(public_key_encoded)
-        pub_key = ECC.import_key(pub_key)
+        ecc_key = ECC.import_key(pub_key)
     except Exception as ex:
-        print("error making ecc key: ", ex)
-
+        print("error making ECC key, must be wrong type", ex)
+        return False
 
     hashed = SHA256.new(message.encode("utf-8"))
+    verifier_ecc = DSS.new(ecc_key, "fips-186-3")
 
-    verifier = DSS.new(pub_key, 'fips-186-3')
     try:
-        verifier.verify(hashed, signature)
-        print("The message is authentic.")
+        verifier_ecc.verify(hashed, sig)
+        print("The message is authentic.  ECC")
+        # verifier_dsa.verify(hashed, sig)
+        # print("The message is authentic.  DSA")
         return True
-    except ValueError:
-        print("The message is not authentic.")
+    except ValueError as ex:
+        print("The message is not authentic.   ECC", ex)
         return False
 
 
+def verify_rsa_signature(message, public_key_encoded, sig):
+    if type(message) != str:
+        print("messaged passed to verify_rsa_signature must be a string")
+        return False
 
+    try:
+        pub_key = base64.b64decode(public_key_encoded)
+        rsa_key = RSA.import_key(pub_key)
+    except Exception as ex:
+        print("error making RSA key, must be wrong type:  ", ex)
+        return False
+
+    hashed = SHA256.new(message.encode("utf-8"))
+    verifier_rsa = pkcs1_15.new(rsa_key)
+
+    try:
+        verifier_rsa.verify(hashed, sig)
+        print("The message is authentic.  RSA")
+        # verifier_dsa.verify(hashed, sig)
+        # print("The message is authentic.  DSA")
+        return True
+    except ValueError as ex:
+        print("The message is not authentic.  RSA", ex)
+        return False
 
 
 
@@ -185,9 +215,8 @@ def hello_world():
 
 
 
-
-@APP.route("/message/validate", methods=["POST"])
-def validate_message():
+@APP.route("/message/validate/ec", methods=["POST"])
+def validate_message_ecc():
     try:
         data = request.get_json()
         keys = ["username", "message", "signature"]
@@ -204,14 +233,12 @@ def validate_message():
 
         decoded_sig = base64.b64decode(signature)
 
-        print("Validating:\n\tmsg: {0}\n\tkey: {1}\n\tsig: {2}".format(message, pub_str, signature))
-
+        print("Validating ECC:\n\tmsg: '{0}'\n\tkey: '{1}'\n\tsig: '{2}'".format(message, pub_str, signature))
+        print("Lengths: {0} {1} {2}".format(len(message), len(pub_str), len(signature)))
 
         verified = verify_ecc_signature(message, pub_str, decoded_sig)
 
         print("VERIFIED:  ", verified)
-
-
 
         if verified:
             return Code.authorize_trans
@@ -220,7 +247,44 @@ def validate_message():
         return Code.fail_trans
 
     except Exception as ex:
-        print("/user/get", ex)
+        print("/message/validate", ex)
+        return Code.server_error
+
+
+
+@APP.route("/message/validate/rsa", methods=["POST"])
+def validate_message_rsa():
+    try:
+        data = request.get_json()
+        keys = ["username", "message", "signature"]
+
+        if not check_keys(data=data, keys=keys):
+            return Code.bad_request
+
+        username = data["username"]
+        message = data["message"]
+        signature = data["signature"]
+
+        user = _get_user(username)
+        pub_str = user["public_key"]
+
+        decoded_sig = base64.b64decode(signature)
+
+        print("Validating RSA:\n\tmsg: '{0}'\n\tkey: '{1}'\n\tsig: '{2}'".format(message, pub_str, signature))
+        print("Lengths: {0} {1} {2}".format(len(message), len(pub_str), len(signature)))
+
+        verified = verify_rsa_signature(message, pub_str, decoded_sig)
+
+        print("VERIFIED:  ", verified)
+
+        if verified:
+            return Code.authorize_trans
+        elif verified is None: # returning None from this is an error state
+            return Code.server_error
+        return Code.fail_trans
+
+    except Exception as ex:
+        print("/message/validate", ex)
         return Code.server_error
 
 
@@ -231,10 +295,10 @@ def add_user():
         data = request.get_json()
         keys = ["username", "password", "public_key"]
 
+        print("Add user req:  Type:{0}  Date: {1}".format(type(data), data))
+
         if not check_keys(data=data, keys=keys):
             return Code.bad_request
-
-        print("Add user req:  Type:{0}  Date: {1}".format(type(data), data))
 
         username = data["username"]
         password = data['password']
@@ -243,12 +307,12 @@ def add_user():
         # print("password:", password)
         start = time.time()
         salt = bcrypt.gensalt(rounds=WORK_FACTOR)
-        hashed = bcrypt.hashpw(str(password).encode(), salt)
+        hashed = bcrypt.hashpw(str(password).encode("utf-8"), salt)
         end = time.time()
 
         # print("pass: ", password)
         print("Time to hash with work factor: {0}  {1}".format(WORK_FACTOR, end-start))
-        print("hashed correctly: ", bcrypt.checkpw(password.encode(), hashed))
+        print("hashed correctly: ", bcrypt.checkpw(password.encode("utf-8"), hashed))
         print("Trying to add the user")
 
         try:
@@ -270,7 +334,6 @@ def add_user():
         return Code.server_error
 
 
-
 def _get_user(user=None):
     try:
         username = str(user)
@@ -278,7 +341,7 @@ def _get_user(user=None):
         res = query_db(query_str)
 
         # print(res)
-        if len(res):
+        if res and len(res):
             resp = {'username': username, "public_key": res[0]["public_key"], "password": res[0]["password"]}
             return resp
 
@@ -332,6 +395,8 @@ def add_user_key():
 def get_user():
     try:
         data = request.get_json()
+
+        print ("Raw data:", data)
         keys = ["username"]
 
         if not check_keys(data=data, keys=keys):
@@ -342,8 +407,13 @@ def get_user():
         res = query_db(query_str)
 
         # print(res)
-        if len(res):
-            resp = {'username': username, "public_key": res[0]["public_key"]}
+        if res and len(res):
+            # print("get user raw resp: ", res)
+            try:
+                resp = {'username': username, "public_key": res[0]["public_key"]}
+            except Exception as ex:
+                print("Error building response from: Res: {0}  {1}".format(res, ex))
+                return Code.server_error
             return Response(json.dumps(resp), status=200)
 
         return Code.user_not_found
@@ -360,37 +430,41 @@ if __name__ == '__main__':
 
 
     # key = ECC.generate(curve="P-256")
-    # print(key.public_key().export_key(format="OpenSSH"))
+    # e = base64.b64encode(key.public_key().export_key(format="DER"))
+    #
+    #
+    #
+    # print("Key:", str(e))
     # pub = key.public_key()
+    # #
+
     #
-    # raw_msg = "user=bob,transaction=145368,endpoint=00015,type=purchase,amount=15.35,time={}".format(str(time.time()))
-    # msg = raw_msg.encode("utf-8")
+    # key = ECC.generate(curve="P-256")
+    # e = base64.b64encode(key.public_key().export_key(format="DER"))
+    # # raw_msg = "user=bob,transaction=145368,endpoint=00015,type=purchase,amount=15.35,time={0}".format(str(time.time()))
     #
-    # # h = SHA256.new(b"test").digest()
+    # raw_msg = "00A4040007A000000247100100"
+    #
+    # msg = raw_msg.encode()
     # h = SHA256.new(msg)
-    # # print(h)
-    # # h.update(msg)
-    # # print(h.digest())
-    # # h = h.digest()
-    #
-    # # print("pub: ", pub)
     #
     # signer = DSS.new(key, 'fips-186-3')
     # signature = signer.sign(h)
-    #
     # encoded_sig = base64.b64encode(signature)
+
+
     #
     # print("Sig: ", encoded_sig.decode())
     #
-    # pub_key = pub.export_key(format="DER")
-    # pub_b64 = base64.b64encode(pub_key)
-    #
-    # print("pub: ", pub_b64)
+    # # pub_key = pub.export_key(format="DER")
+    # # pub_b64 = base64.b64encode(pub_key)
+    # #
+    # # print("pub: ", pub_b64)
     # print("msg: ", raw_msg)
-    #
+    # #
     #
     # time.sleep(1)
-    # verify_ecc_signature(raw_msg, pub_b64, signature)
+    # verify_ecc_signature(raw_msg, e, signature)
     #
     # # verifier = DSS.new(pub, 'fips-186-3')
     # # try:

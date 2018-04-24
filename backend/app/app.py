@@ -114,7 +114,7 @@ def verify_ecc_signature(message, public_key_encoded, sig):
         print("messaged passed to verify_ecc_signature must be a string")
         return False
 
-    rv = subprocess.call(["java", "Verify", sig, public_key_encoded, message])
+    rv = subprocess.call(["java", "-jar", "Verify.jar", sig, public_key_encoded, message])
     print("RV of java call {0}".format(rv))
 
     if rv is 9:

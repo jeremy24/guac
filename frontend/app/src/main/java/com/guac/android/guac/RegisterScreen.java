@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.security.keystore.KeyGenParameterSpec;
@@ -51,7 +53,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class RegisterScreen extends AppCompatActivity {
-
+    private NfcAdapter nfc2 = null;
     @RequiresApi(api = Build.VERSION_CODES.M)
     public KeyPair keyGen(String username) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
@@ -62,11 +64,7 @@ public class RegisterScreen extends AppCompatActivity {
                         KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY)
                         .setAlgorithmParameterSpec(new ECGenParameterSpec("secp256r1"))
                         .setDigests(
-                                  KeyProperties.DIGEST_SHA256)//,
-                                //KeyProperties.DIGEST_SHA384,
-                                //KeyProperties.DIGEST_SHA512)
-                        // Only permit the private key to be used if the user authenticated
-                        // within the last five minutes.
+                                  KeyProperties.DIGEST_SHA256)
                         .build());
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
         Signature signature = Signature.getInstance("SHA256withECDSA");
@@ -75,10 +73,20 @@ public class RegisterScreen extends AppCompatActivity {
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_screen);
+        nfc2 = NfcAdapter.getDefaultAdapter(this);
+        nfc2.enableReaderMode(this, new NfcAdapter.ReaderCallback() {
+                    @Override
+                    public void onTagDiscovered(Tag tag) {
+
+                    }
+                },
+                (NfcAdapter.FLAG_READER_NFC_A + (NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK)),
+                null);
         waitForInput();
     }
 
@@ -93,29 +101,13 @@ public class RegisterScreen extends AppCompatActivity {
                     return;
                 } else {
                     Log.println(4, "tagged", studentID.getText() + " " + pass.getText());
-                    PackageInfo packageInfo = null;
                     try {
 
-                        KeyPair kp = keyGen(studentID.getText().toString());
+                        keyGen(studentID.getText().toString());
                         KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
                         keyStore.load(null);
-                        PrivateKey privateKey = (PrivateKey) keyStore.getKey(studentID.getText().toString(), null);
                         PublicKey publicKey = keyStore.getCertificate(studentID.getText().toString()).getPublicKey();
-                        Log.println(4, "log", String.valueOf(keyStore.size()));
-
-                        String s = "hello";
-                        Signature sig = Signature.getInstance("SHA256withECDSA");
-                        sig.initSign(privateKey);
-                        sig.update(s.getBytes());
-                        byte[] signed = sig.sign();
-                        Signature sig2 = Signature.getInstance("SHA256withECDSA");
-                        sig2.initVerify(publicKey);
-                        sig2.update(s.getBytes());
-                        Boolean boo = sig2.verify(Base64.getDecoder().decode(Base64.getEncoder().encode(signed)));
-                        Log.println(4, "boooo", boo.toString());
-
                         String pubKey = Base64.getEncoder().encodeToString(publicKey.getEncoded());
-                        //String pubKey = new String(publicKeyBytes);
                         postUser(studentID.getText().toString(), pass.getText().toString(), pubKey);
                     }catch (IOException e) {
                         e.printStackTrace();
@@ -127,15 +119,11 @@ public class RegisterScreen extends AppCompatActivity {
                         e.printStackTrace();
                     } catch (CertificateException e) {
                         e.printStackTrace();
-                    } catch (UnrecoverableKeyException e) {
-                        e.printStackTrace();
                     } catch (InvalidKeyException e) {
                         e.printStackTrace();
                     } catch (NoSuchProviderException e) {
                         e.printStackTrace();
                     } catch (InvalidAlgorithmParameterException e) {
-                        e.printStackTrace();
-                    } catch (SignatureException e) {
                         e.printStackTrace();
                     }
                     finish();

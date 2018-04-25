@@ -35,32 +35,9 @@ class HostCardEmulatorService: HostApduService() {
     }
 
     private var message = "Success"
-    var status: Int? = 0
-    private lateinit var username: String
-    private var nfc: NfcAdapter? = null
-
-
-    public fun incStatus(){
-        status = status!! +1
-    }
 
     override fun onCreate() {
         super.onCreate()
-        /*
-        val broadCastReceiver = object : BroadcastReceiver() {
-            override fun onReceive(contxt: Context?, intent: Intent?) {
-
-                if (intent != null) {
-                    when (intent.action) {
-                        intent.getStringExtra("username") -> username
-                    }
-                }
-            }
-        }
-        var intentFilter: IntentFilter = IntentFilter()
-        intentFilter.addAction("getting_data")
-        registerReceiver(broadCastReceiver, intentFilter)
-        */
     }
 
     override fun onDeactivated(reason: Int) {
@@ -73,7 +50,6 @@ class HostCardEmulatorService: HostApduService() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun processCommandApdu(commandApdu: ByteArray?, extras: Bundle?): ByteArray {
-
         if (commandApdu == null) {
             return Utils.hexStringToByteArray(STATUS_FAILED)
         }
@@ -92,43 +68,26 @@ class HostCardEmulatorService: HostApduService() {
             return Utils.hexStringToByteArray(INS_NOT_SUPPORTED)
         }
 
-        Log.println(4, "log", hexCommandApdu.substring(11,13))
         if (hexCommandApdu.substring(10,24) == AID)  {
-            if(hexCommandApdu.substring(24,26) == "00") {
                 val keyStore = KeyStore.getInstance("AndroidKeyStore")
                 val userID: String = Utils.getUserID()
                 keyStore.load(null)
                 val privateKey = keyStore.getKey(userID, null) as PrivateKey
-                val publicKey = keyStore.getCertificate(userID).publicKey
                 var sign: String
-                sign = "hello"//"00A4040007A0000002471001"
+                sign = "hello"
 
                 var sig: Signature = Signature.getInstance("SHA256withECDSA")
                 sig.initSign(privateKey)
-                sig.update(sign.toByteArray())//Utils.hexStringToByteArray(sign))//Utils.hexStringToByteArray(hexCommandApdu.substring(0,24)))//.toByte())
+                sig.update(sign.toByteArray())
                 var signed: ByteArray = sig.sign()
-                var userBytes = Utils.getUserID().toByteArray()
-                var newArray: ByteArray = ByteArray(0)
+                var newArray= ByteArray(0)
                 newArray = newArray.plus(signed.size.toByte()).plus(signed).plus(Utils.getUserID().toByteArray())
-                /*
-                var sig2: Signature = Signature.getInstance("SHA256withECDSA")
-                val publicKeyBytes = Base64.getEncoder().encode(publicKey.encoded)
-                val pubKey = String(publicKeyBytes)
-                Log.println(4, "tag", pubKey)
-                sig2.initVerify(publicKey)
-                sig2.update(Utils.hexStringToByteArray(sign))
-                var boo: Boolean = sig2.verify(signed)
-                Log.println(4, "tag", boo.toString() + " " + userID)*/
-                return newArray//signed
-            }
-            if(hexCommandApdu.substring(24,26) == "11"){
-                return Utils.getUserID().toByteArray()
-            }
-
+                sendBroadcast(Intent("xyz"));
+                return newArray
         } else {
-            return "fail".toByteArray()//Utils.hexStringToByteArray(STATUS_FAILED)
+            return "fail".toByteArray()
         }
 
-        return "fail".toByteArray()//Utils.hexStringToByteArray(STATUS_FAILED)
+        return "fail".toByteArray()
     }
 }

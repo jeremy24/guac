@@ -10,39 +10,59 @@ import android.os.Bundle
 import android.support.annotation.RequiresApi
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
-//import com.guac.android.guac.R.id.textView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_nfcscreen.*
-import java.security.KeyStore
-import java.security.PrivateKey
-import java.security.Signature
+import java.security.*
+//import java.security.KeyStore
+//import java.security.PrivateKey
+import java.security.spec.X509EncodedKeySpec
 import java.util.*
+import javax.crypto.SecretKey
 
 @RequiresApi(Build.VERSION_CODES.KITKAT)
-class NFCScreen : AppCompatActivity(), NfcAdapter.ReaderCallback {
+class NFCScreen : AppCompatActivity() {//, NfcAdapter.ReaderCallback {
 
     private var nfcAdapter: NfcAdapter? = null
     public var status = 0
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        val intent = Intent(this, MainScreen::class.java)
+        startActivity(intent)
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nfcscreen)
-        nfcAdapter = NfcAdapter.getDefaultAdapter(this)
-
-        var hexCommandApdu: String = "00A4040007A000000247100100"
         val keyStore = KeyStore.getInstance("AndroidKeyStore")
         val userID: String = Utils.getUserID()
-        Log.println(4, "tag", userID)
         keyStore.load(null)
         val privateKey = keyStore.getKey(userID, null) as PrivateKey
         val publicKey = keyStore.getCertificate(userID).publicKey
         var sign: String
-        sign = hexCommandApdu.substring(0, hexCommandApdu.length)
+        sign = "hello"//"00A4040007A0000002471001"
 
         var sig: Signature = Signature.getInstance("SHA256withECDSA")
         sig.initSign(privateKey)
-        sig.update(Utils.hexStringToByteArray(hexCommandApdu))//.toByte())
+        sig.update(sign.toByteArray())//Utils.hexStringToByteArray(sign))//Utils.hexStringToByteArray(hexCommandApdu.substring(0,24)))//.toByte())
+        var signed: ByteArray = sig.sign()
+        var userBytes = Utils.getUserID().toByteArray()
+        var newArray: ByteArray = ByteArray(0)
+        newArray.plus(signed.size.toByte()).plus(signed).plus(Utils.getUserID().toByteArray())
+        /*
+        //nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+
+        var hexCommandApdu: String = "hello"
+        val keyStore = KeyStore.getInstance("AndroidKeyStore")
+        val userID: String = Utils.getUserID()
+        keyStore.load(null)
+        val privateKey: Key = keyStore.getKey(userID, null) as PrivateKey
+        val publicKey = keyStore.getCertificate(userID).publicKey
+
+        var sig: Signature = Signature.getInstance("SHA256withECDSA")
+        sig.initSign(privateKey as PrivateKey)
+        sig.update(hexCommandApdu.toByteArray())//Utils.hexStringToByteArray(hexCommandApdu))//.toByte())
         var signed: ByteArray = sig.sign()
 
 
@@ -50,12 +70,22 @@ class NFCScreen : AppCompatActivity(), NfcAdapter.ReaderCallback {
         val publicKeyBytes = Base64.getEncoder().encode(publicKey.encoded)
         val pubKey = String(publicKeyBytes)
         Log.println(4, "tag", pubKey)
+
+        val pubKeyDecode = Base64.getDecoder().decode(pubKey)
+        var x: X509EncodedKeySpec = X509EncodedKeySpec(pubKeyDecode)
+        var pKey: PublicKey = KeyFactory.getInstance("EC").generatePublic(x)
+        sig2.initVerify(pKey)
+        sig2.update("hello".toByteArray())
+        Log.println(4, "test", pubKey + " " + sig2.verify(signed).toString())
+
+
+
         //val intent = Intent(this, HostCardEmulatorService::class.java)
         //startService(intent)
         //nfcAdapter?.disableReaderMode(this);
         //nfcAdapter = null;
     }
-
+    /*
     @RequiresApi(Build.VERSION_CODES.KITKAT)
     public override fun onResume() {
         super.onResume()
@@ -95,10 +125,8 @@ class NFCScreen : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 + Utils.hexToAscii(Utils.toHex(tmp)) + " " + status.toString() + " " + respString)}
         isoDep.close()
     }
+*/
+    */
 
-    override fun onBackPressed() {
-        super.onBackPressed()
-        val intent = Intent(this, MainScreen::class.java)
-        startActivity(intent)
     }
 }

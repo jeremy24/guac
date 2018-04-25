@@ -4,16 +4,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainScreen"
     android:background="@color/colorAccent"
     android:theme="@android:style/Theme.NoTitleBar"
-    >
+    tools:context=".MainScreen">
 
     <TextView
         android:id="@+id/textView3"
-        android:layout_width="265dp"
-        android:layout_height="311dp"
-        android:text="TextView"
-        tools:layout_editor_absoluteX="118dp"
-        tools:layout_editor_absoluteY="203dp" />
+        android:layout_width="311dp"
+        android:layout_height="32dp"
+        android:layout_marginBottom="274dp"
+        android:layout_marginTop="200dp"
+        android:text="Please tap phone on POS system."
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </android.support.constraint.ConstraintLayout>

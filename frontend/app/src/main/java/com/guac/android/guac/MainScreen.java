@@ -4,6 +4,8 @@ import android.annotation.TargetApi;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.Image;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
 import android.nfc.cardemulation.NfcFCardEmulation;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
@@ -40,7 +42,8 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
 
-public class MainScreen extends AppCompatActivity {
+@RequiresApi(api = Build.VERSION_CODES.KITKAT)
+public class MainScreen extends AppCompatActivity implements NfcAdapter.ReaderCallback {
     private static final String KEY_NAME = "yourKey";
     private Cipher cipher;
     private KeyStore keyStore;
@@ -49,6 +52,7 @@ public class MainScreen extends AppCompatActivity {
     private FingerprintManager.CryptoObject cryptoObject;
     private FingerprintManager fingerprintManager;
     private KeyguardManager keyguardManager;
+    private NfcAdapter nfc = null;
 
     @TargetApi(Build.VERSION_CODES.N)
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -56,6 +60,10 @@ public class MainScreen extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
+        nfc = NfcAdapter.getDefaultAdapter(this);
+        nfc.enableReaderMode(this, this,
+                (NfcAdapter.FLAG_READER_NFC_A + (NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK)),
+                null);
         final Button button = findViewById(R.id.button);
         final TextView button_text = findViewById(R.id.register);
         final ImageView icon = findViewById(R.id.imageView2);
@@ -234,6 +242,9 @@ public class MainScreen extends AppCompatActivity {
             throw new RuntimeException("Failed to init Cipher", e);
         }
     }
+
+    @Override
+    public void onTagDiscovered(Tag tag) { }
 
     private class FingerprintException extends Exception {
         public FingerprintException(Exception e) {

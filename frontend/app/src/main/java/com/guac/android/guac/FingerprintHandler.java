@@ -1,6 +1,7 @@
 package com.guac.android.guac;
 import android.app.Activity;
 import android.content.Intent;
+import android.nfc.NfcAdapter;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;

@@ -8,5 +8,6 @@
     <string name="aiddescription">negotiating p2p</string>
     <string name="servicedesc">negotiating p2p</string>
     <string name="user">USER ID: </string>
+    <string name="NFCswipe">Please swipe your card.</string>
 </resources>
 

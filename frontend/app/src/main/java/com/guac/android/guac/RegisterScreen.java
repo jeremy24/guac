@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import com.guac.android.guac.Utils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -58,11 +59,12 @@ public class RegisterScreen extends AppCompatActivity {
         keyPairGenerator.initialize(
                 new KeyGenParameterSpec.Builder(
                         username,
-                        KeyProperties.PURPOSE_SIGN)
+                        KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY)
                         .setAlgorithmParameterSpec(new ECGenParameterSpec("secp256r1"))
-                        .setDigests(KeyProperties.DIGEST_SHA256,
-                                KeyProperties.DIGEST_SHA384,
-                                KeyProperties.DIGEST_SHA512)
+                        .setDigests(
+                                  KeyProperties.DIGEST_SHA256)//,
+                                //KeyProperties.DIGEST_SHA384,
+                                //KeyProperties.DIGEST_SHA512)
                         // Only permit the private key to be used if the user authenticated
                         // within the last five minutes.
                         .build());
@@ -70,6 +72,7 @@ public class RegisterScreen extends AppCompatActivity {
         Signature signature = Signature.getInstance("SHA256withECDSA");
         signature.initSign(keyPair.getPrivate());
         return keyPair;
+
     }
 
     @Override
@@ -93,18 +96,13 @@ public class RegisterScreen extends AppCompatActivity {
                     PackageInfo packageInfo = null;
                     try {
 
-                        keyGen(studentID.getText().toString());
+                        KeyPair kp = keyGen(studentID.getText().toString());
                         KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
                         keyStore.load(null);
                         PrivateKey privateKey = (PrivateKey) keyStore.getKey(studentID.getText().toString(), null);
                         PublicKey publicKey = keyStore.getCertificate(studentID.getText().toString()).getPublicKey();
                         Log.println(4, "log", String.valueOf(keyStore.size()));
-                        /*
-                        Intent broadcast1 = new Intent("getting_data");
-                        broadcast1.putExtra("username", studentID.getText().toString());
-                        sendBroadcast(broadcast1);
-                        */
-                        /*
+
                         String s = "hello";
                         Signature sig = Signature.getInstance("SHA256withECDSA");
                         sig.initSign(privateKey);
@@ -113,11 +111,11 @@ public class RegisterScreen extends AppCompatActivity {
                         Signature sig2 = Signature.getInstance("SHA256withECDSA");
                         sig2.initVerify(publicKey);
                         sig2.update(s.getBytes());
-                        Boolean boo = sig2.verify(signed);
+                        Boolean boo = sig2.verify(Base64.getDecoder().decode(Base64.getEncoder().encode(signed)));
                         Log.println(4, "boooo", boo.toString());
-                        */
-                        byte[] publicKeyBytes = Base64.getEncoder().encode(publicKey.getEncoded());
-                        String pubKey = new String(publicKeyBytes);
+
+                        String pubKey = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+                        //String pubKey = new String(publicKeyBytes);
                         postUser(studentID.getText().toString(), pass.getText().toString(), pubKey);
                     }catch (IOException e) {
                         e.printStackTrace();
@@ -137,6 +135,8 @@ public class RegisterScreen extends AppCompatActivity {
                         e.printStackTrace();
                     } catch (InvalidAlgorithmParameterException e) {
                         e.printStackTrace();
+                    } catch (SignatureException e) {
+                        e.printStackTrace();
                     }
                     finish();
                     startActivity(new Intent(RegisterScreen.this, MainScreen.class));
@@ -144,7 +144,8 @@ public class RegisterScreen extends AppCompatActivity {
             }
         });
     }
-    private void postUser(final String id, final String pass, final String pubKey) throws IOException, JSONException {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void postUser(final String id, final String pass, final String pubKey) throws IOException, JSONException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
         String urlString = "https://home.piroax.com/volcard/user/add";
         URL url = new URL(urlString);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();

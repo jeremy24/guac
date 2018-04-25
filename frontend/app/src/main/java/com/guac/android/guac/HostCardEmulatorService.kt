@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.nfc.NfcAdapter
 import android.nfc.cardemulation.HostApduService
 import android.os.Build
 import android.os.Bundle
@@ -36,6 +37,7 @@ class HostCardEmulatorService: HostApduService() {
     private var message = "Success"
     var status: Int? = 0
     private lateinit var username: String
+    private var nfc: NfcAdapter? = null
 
 
     public fun incStatus(){
@@ -95,19 +97,20 @@ class HostCardEmulatorService: HostApduService() {
             if(hexCommandApdu.substring(24,26) == "00") {
                 val keyStore = KeyStore.getInstance("AndroidKeyStore")
                 val userID: String = Utils.getUserID()
-                Log.println(4, "tag", userID)
                 keyStore.load(null)
                 val privateKey = keyStore.getKey(userID, null) as PrivateKey
                 val publicKey = keyStore.getCertificate(userID).publicKey
                 var sign: String
-                sign = hexCommandApdu.substring(0, 24)
+                sign = "hello"//"00A4040007A0000002471001"
 
                 var sig: Signature = Signature.getInstance("SHA256withECDSA")
                 sig.initSign(privateKey)
-                sig.update(Utils.hexStringToByteArray(hexCommandApdu))//.toByte())
+                sig.update(sign.toByteArray())//Utils.hexStringToByteArray(sign))//Utils.hexStringToByteArray(hexCommandApdu.substring(0,24)))//.toByte())
                 var signed: ByteArray = sig.sign()
-
-
+                var userBytes = Utils.getUserID().toByteArray()
+                var newArray: ByteArray = ByteArray(0)
+                newArray = newArray.plus(signed.size.toByte()).plus(signed).plus(Utils.getUserID().toByteArray())
+                /*
                 var sig2: Signature = Signature.getInstance("SHA256withECDSA")
                 val publicKeyBytes = Base64.getEncoder().encode(publicKey.encoded)
                 val pubKey = String(publicKeyBytes)
@@ -115,8 +118,8 @@ class HostCardEmulatorService: HostApduService() {
                 sig2.initVerify(publicKey)
                 sig2.update(Utils.hexStringToByteArray(sign))
                 var boo: Boolean = sig2.verify(signed)
-                Log.println(4, "tag", boo.toString() + " " + userID)
-                return signed
+                Log.println(4, "tag", boo.toString() + " " + userID)*/
+                return newArray//signed
             }
             if(hexCommandApdu.substring(24,26) == "11"){
                 return Utils.getUserID().toByteArray()
